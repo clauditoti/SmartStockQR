@@ -1,0 +1,328 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <h2 class="mb-4 text-success"><i class="bi bi-box-arrow-in-down"></i> Devolución Multicarga</h2>
+        
+        <div class="card shadow border-success mb-4">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-pencil-square"></i> 1. Preparar Devolución
+            </div>
+            <div class="card-body">
+                
+                <div id="reader" width="100%" style="display:none;" class="mb-3 border border-success rounded"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Código QR</label>
+                        <div class="input-group">
+                            <button class="btn btn-outline-success" type="button" onclick="iniciarEscaner()">
+                                <i class="bi bi-qr-code-scan"></i> Escanear
+                            </button>
+                            <input type="text" id="inputQR" class="form-control fw-bold text-primary" placeholder="Escanee..." onkeypress="handleEnter(event)">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Estado de Recepción</label>
+                        <select id="inputEstado" class="form-select">
+                            <option value="DISPONIBLE" selected>✅ Bueno / Operativo</option>
+                            <option value="EN_MANTENCION">⚠️ Dañado / Falla</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Evidencia (Opcional)</label>
+                        <input type="file" id="inputFoto" class="form-control" accept="image/*" capture="environment">
+                    </div>
+                    
+                    <div class="col-12">
+                        <input type="text" id="inputObs" class="form-control" placeholder="Observación (Ej: Broca gastada, cable pelado...)">
+                    </div>
+
+                    <div class="col-12 d-grid">
+                        <button type="button" class="btn btn-success" onclick="agregarAlLote()">
+                            <i class="bi bi-plus-circle-fill"></i> 2. VALIDAR Y AGREGAR A LA LISTA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="formLote" onsubmit="return validarEnvio()">
+            {% csrf_token %}
+            
+            {% if mensaje %}
+                <div class="alert alert-success shadow-sm"><i class="bi bi-check-circle-fill"></i> {{ mensaje }}</div>
+            {% endif %}
+            {% if error %}
+                <div class="alert alert-danger shadow-sm"><i class="bi bi-exclamation-triangle-fill"></i> {{ error }}</div>
+            {% endif %}
+
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-muted"><i class="bi bi-list-check"></i> Ítems listos para procesar</span>
+                    <span class="badge bg-success rounded-pill fs-6" id="contador">0</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>QR</th>
+                                <th>Herramienta</th> 
+                                <th>Estado</th>
+                                <th>Observación</th>
+                                <th>Evidencia</th>
+                                <th class="text-end">Quitar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaItems">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card-body text-center py-5" id="mensajeVacio">
+                    <i class="bi bi-basket display-1 text-muted opacity-25"></i>
+                    <p class="text-muted mt-2">La lista está vacía. Complete el formulario arriba para agregar ítems.</p>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 mb-5">
+                <button type="submit" class="btn btn-dark btn-lg shadow-lg">
+                    <i class="bi bi-save-fill"></i> Confirmar Recepción
+                </button>
+                
+                <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-arrow-left-circle"></i> Cancelar / Volver atrás
+                </a>
+            </div>
+        </form>
+
+        {% if ultimas_devoluciones %}
+        <div class="card shadow-sm border-0 bg-light mb-5">
+            <div class="card-body">
+                <h6 class="text-muted mb-3 small text-uppercase fw-bold">Historial Reciente</h6>
+                <ul class="list-group list-group-flush small bg-transparent">
+                    {% for d in ultimas_devoluciones %}
+                    <li class="list-group-item d-flex justify-content-between bg-transparent border-bottom">
+                        <span><strong>{{ d.herramienta.codigo_qr }}</strong> - {{ d.herramienta.nombre }}</span>
+                        {% if d.estado_devolucion == 'EN_MANTENCION' %}
+                            <span class="badge bg-danger">DAÑADO</span>
+                        {% else %}
+                            <span class="badge bg-success">DISPONIBLE</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    let itemIndex = 0; 
+    let codigosEnLista = []; 
+    
+    // VARIABLES PARA EL ESCÁNER
+    let ultimoQREscaneado = null;
+    var html5QrcodeScanner;
+    // Usamos un sonido corto estándar
+    const audioBeep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'); 
+
+    // ==========================================
+    // FUNCIÓN: AGREGAR A LA TABLA (MANUAL)
+    // ==========================================
+    async function agregarAlLote() {
+        // 1. OBTENER LOS INPUTS
+        const inputQR = document.getElementById('inputQR');
+        const inputEstado = document.getElementById('inputEstado');
+        const inputObs = document.getElementById('inputObs');
+        const inputFoto = document.getElementById('inputFoto'); 
+
+        const qr = inputQR.value.trim().toUpperCase();
+        const estado = inputEstado.value;
+        const obs = inputObs.value.trim();
+
+        // Validaciones básicas
+        if (!qr) return Swal.fire('Falta Código', 'Ingrese o escanee un QR primero.', 'warning');
+
+        if (codigosEnLista.includes(qr)) {
+            Swal.fire('Duplicado', `La herramienta ${qr} ya está en la lista de abajo.`, 'warning');
+            inputQR.value = "";
+            return; 
+        }
+
+        // 2. CONSULTAR AL SERVIDOR SI EL QR EXISTE Y ESTÁ EN USO
+        try {
+            const response = await fetch(`/api/verificar/?codigo=${qr}`);
+            const data = await response.json();
+
+            if (!data.existe) {
+                Swal.fire('Error', 'Código QR no reconocido en el sistema.', 'error');
+                return;
+            }
+            
+            // Solo permitimos devolver cosas que estén prestadas (EN_USO)
+            if (data.estado !== 'EN_USO') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Estado',
+                    text: `La herramienta '${data.nombre}' figura como: ${data.estado}. Solo se pueden devolver herramientas que figuren 'EN_USO'.`
+                });
+                return; 
+            }
+
+            const nombreHerramienta = data.nombre;
+            const marcaHerramienta = data.marca || '';
+
+            // 3. DIBUJAR LA FILA EN LA TABLA
+            codigosEnLista.push(qr);
+            const tabla = document.getElementById('tablaItems');
+            const filaId = `row-${itemIndex}`;
+            
+            const estadoLabel = estado === 'DISPONIBLE' 
+                ? '<span class="badge bg-success">Bueno</span>' 
+                : '<span class="badge bg-danger">Dañado</span>';
+            
+            const tieneFoto = (inputFoto.files.length > 0) 
+                ? '<span class="text-primary fw-bold"><i class="bi bi-image"></i> Foto adjunta</span>' 
+                : '<span class="text-muted small">-</span>';
+
+            const row = document.createElement('tr');
+            row.id = filaId;
+            
+            // Creamos los inputs hidden para enviar al backend
+            row.innerHTML = `
+                <td class="fw-bold text-primary">${qr}</td>
+                <td>
+                    <strong>${nombreHerramienta}</strong><br> <small class="text-muted">${marcaHerramienta}</small>
+                </td>
+                <td>${estadoLabel}</td>
+                <td><small class="text-muted">${obs || '-'}</small></td>
+                <td>${tieneFoto}</td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="borrarFila('${filaId}', '${qr}')">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                    <input type="hidden" name="qrs[]" value="${qr}">
+                    <input type="hidden" name="estados[]" value="${estado}">
+                    <input type="hidden" name="observaciones[]" value="${obs}">
+                    <div id="file-container-${itemIndex}" style="display:none;"></div>
+                </td>
+            `;
+
+            tabla.appendChild(row);
+
+            // 4. MANEJO DEL ARCHIVO (CLONACIÓN SEGURA)
+            // Si el usuario subió foto, la movemos a la fila oculta
+            if (inputFoto.files.length > 0) {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'file';
+                hiddenInput.name = `foto_${itemIndex}`; // Nombre único para el backend
+                
+                // Truco moderno para copiar el archivo
+                const dt = new DataTransfer();
+                dt.items.add(inputFoto.files[0]);
+                hiddenInput.files = dt.files;
+
+                document.getElementById(`file-container-${itemIndex}`).appendChild(hiddenInput);
+            }
+
+            // 5. LIMPIEZA DE INPUTS (Para el siguiente ítem)
+            inputQR.value = '';
+            inputObs.value = '';
+            inputFoto.value = ''; 
+            inputEstado.value = 'DISPONIBLE'; // Volver al default
+            
+            inputQR.focus(); // Devolver foco al QR
+            document.getElementById('mensajeVacio').style.display = 'none';
+            
+            itemIndex++;
+            actualizarContador();
+            
+            // Feedback visual de éxito
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            Toast.fire({ icon: 'success', title: 'Agregado a la lista' });
+
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+        }
+    }
+
+    function borrarFila(id, qrCode) {
+        document.getElementById(id).remove();
+        codigosEnLista = codigosEnLista.filter(code => code !== qrCode);
+        actualizarContador();
+    }
+
+    function actualizarContador() {
+        const count = document.getElementById('tablaItems').children.length;
+        document.getElementById('contador').innerText = count;
+        if(count === 0) document.getElementById('mensajeVacio').style.display = 'block';
+    }
+
+    function validarEnvio() {
+        if (codigosEnLista.length === 0) {
+            Swal.fire('Lista Vacía', 'Agregue al menos una herramienta a la lista de abajo antes de confirmar.', 'warning');
+            return false;
+        }
+        return true;
+    }
+
+    function handleEnter(e) {
+        if(e.key === 'Enter'){
+            e.preventDefault(); 
+            agregarAlLote();
+        }
+    }
+
+    // ==========================================
+    // LÓGICA DEL ESCÁNER (MODIFICADA)
+    // ==========================================
+    function iniciarEscaner() {
+        document.getElementById('reader').style.display = 'block';
+        
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { fps: 10, qrbox: 250 }
+        );
+
+        html5QrcodeScanner.render((decodedText) => {
+            // Evitar lecturas múltiples rapidísimas del mismo código
+            if (decodedText === ultimoQREscaneado) return;
+            
+            // 1. LLENAR EL CAMPO QR
+            document.getElementById('inputQR').value = decodedText;
+            
+            // 2. SONIDO DE FEEDBACK
+            audioBeep.play().catch(e => console.log("Audio autoplay bloqueado"));
+
+            // 3. ACTUALIZAR VARIABLE DE CONTROL
+            ultimoQREscaneado = decodedText;
+
+            // 4. (IMPORTANTE) NO LLAMAR A agregarAlLote() AUTOMÁTICAMENTE
+            // Solo damos foco al campo de estado o observación para que el usuario siga
+            document.getElementById('inputEstado').focus();
+
+            // 5. EFECTO VISUAL (Opcional)
+            let input = document.getElementById('inputQR');
+            input.classList.add('bg-success', 'text-white');
+            setTimeout(() => input.classList.remove('bg-success', 'text-white'), 500);
+
+            // Reiniciar el bloqueo de lectura después de 3 segundos (por si quiere escanear el mismo de nuevo)
+            setTimeout(() => {
+                ultimoQREscaneado = null;
+            }, 2000);
+        });
+    }
+</script>
+{% endblock %}

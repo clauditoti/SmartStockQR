@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Etiqueta {{ h.codigo_qr }}</title>
+    <style>
+        /* ESTILOS GENERALES (Pantalla) */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0; /* Fondo gris en pantalla para resaltar la etiqueta blanca */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* DISEÑO DE LA ETIQUETA FÍSICA */
+        .etiqueta {
+            background-color: white;
+            border: 2px solid #000;
+            width: 350px; /* Ancho estándar legible */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Sombra solo para pantalla */
+        }
+
+        .titulo {
+            font-size: 22px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .marca {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        /* El Código QR generado por Python */
+        .qr-img {
+            width: 180px;
+            height: 180px;
+            object-fit: contain; /* Asegura que no se deforme */
+            margin: 10px 0;
+        }
+
+        .codigo-texto {
+            font-size: 28px;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace; /* Fuente monoespaciada tipo ticket */
+            background-color: #eee;
+            padding: 5px 15px;
+            border-radius: 4px;
+            display: inline-block;
+            letter-spacing: 2px;
+        }
+
+        /* BOTÓN DE IMPRESIÓN (Solo visible en pantalla) */
+        .btn-print {
+            margin-top: 30px;
+            padding: 12px 25px;
+            background: #0d6efd; /* Azul Bootstrap */
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(13, 110, 253, 0.3);
+            transition: transform 0.2s;
+        }
+        .btn-print:hover { transform: scale(1.05); background: #0b5ed7; }
+
+        /* ================================================================= */
+        /* TRUCO TÉCNICO: ESTILOS DE IMPRESIÓN (@media print) */
+        /* ================================================================= */
+        /* Informe: Justificación de usabilidad en obra */
+        @media print {
+            body {
+                background: none;
+                margin: 0;
+                padding: 0;
+                display: block; /* Quitamos Flexbox para imprimir */
+            }
+            .btn-print {
+                display: none !important; /* OCULTAMOS EL BOTÓN AL IMPRIMIR */
+            }
+            .etiqueta {
+                border: 1px solid #000; /* Borde más fino para ahorrar tinta */
+                box-shadow: none; /* Sin sombras */
+                margin: 0; /* Alinear a la esquina superior izquierda del papel */
+                page-break-inside: avoid; /* Evita que se corte la etiqueta en dos hojas */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="etiqueta">
+        <div class="titulo">{{ h.nombre }}</div>
+        
+        <div class="marca">{{ h.marca }} {{ h.modelo|default:"" }}</div>
+        
+        {% if h.imagen_qr %}
+            <img src="{{ h.imagen_qr.url }}" alt="Código QR de {{ h.nombre }}" class="qr-img">
+        {% else %}
+            <p style="color:red; border:1px dashed red; padding:10px;">
+                ⚠️ QR NO DISPONIBLE<br>Re-generar en Admin
+            </p>
+        {% endif %}
+        
+        <div>
+            <span class="codigo-texto">{{ h.codigo_qr }}</span>
+        </div>
+        <small style="margin-top:10px; display:block; font-size:12px;">Propiedad de SmartStockQR</small>
+    </div>
+
+    <button class="btn-print" onclick="window.print()">
+        🖨️ Imprimir Etiqueta
+    </button>
+
+</body>
+</html>

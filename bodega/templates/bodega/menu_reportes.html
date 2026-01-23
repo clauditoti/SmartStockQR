@@ -1,0 +1,65 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="container mt-5">
+    
+    <div class="row mb-4 text-center">
+        <div class="col-12">
+            <h2 class="text-primary fw-bold"><i class="bi bi-file-earmark-text"></i> Centro de Reportes</h2>
+            <p class="text-muted">Seleccione el tipo de informe que desea generar.</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center g-4">
+        
+        <div class="col-md-5">
+            <div class="card h-100 shadow-sm hover-card border-danger border-start border-5">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3">
+                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title fw-bold text-dark">Reporte de Mermas</h4>
+                    <p class="card-text text-muted px-3">
+                        Bitácora de auditoría: Bajas, Pérdidas, Daños y Reactivaciones de inventario.
+                    </p>
+                    <a href="{% url 'reportes' %}" class="btn btn-danger mt-3 stretched-link">
+                        Ver Bitácora de Bajas
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card h-100 shadow-sm hover-card border-primary border-start border-5">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3">
+                        <i class="bi bi-clock-history text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title fw-bold text-dark">Historial Transaccional</h4>
+                    <p class="card-text text-muted px-3">
+                        Trazabilidad total. Registro cronológico de todos los préstamos y devoluciones.
+                    </p>
+                    <a href="{% url 'historial_transacciones' %}" class="btn btn-primary mt-3 stretched-link">
+                        Ver Historial Completo
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <a href="{% url 'inicio' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver al Inicio
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Animación suave al pasar el mouse */
+    .hover-card { transition: transform 0.2s; }
+    .hover-card:hover { transform: translateY(-5px); background-color: #f8f9fa; }
+</style>
+{% endblock %}

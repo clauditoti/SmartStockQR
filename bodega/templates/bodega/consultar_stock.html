@@ -1,0 +1,192 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+    <div class="col-md-9"> 
+        
+        <div class="mb-4">
+            <h2 class="text-info mb-3"><i class="bi bi-search"></i> Consultar Stock (Gestión)</h2>
+            
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body py-2 d-flex justify-content-around text-center align-items-center">
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Histórico Total</small>
+                        <h4 class="mb-0 fw-bold text-dark">{{ total_sistema }}</h4>
+                    </div>
+                    <div class="vr opacity-25"></div> 
+                    <div>
+                        <small class="text-success text-uppercase fw-bold" style="font-size: 0.7rem;">Activas (Total)</small>
+                        <h4 class="mb-0 fw-bold text-success">{{ total_activas }}</h4>
+                    </div>
+                    <div class="vr opacity-25"></div>
+                    <div>
+                        <small class="text-warning text-uppercase fw-bold" style="font-size: 0.7rem;">En Préstamo</small>
+                        <h4 class="mb-0 fw-bold text-warning">{{ total_en_uso }}</h4>
+                    </div>
+                    <div class="vr opacity-25"></div>
+                    <div>
+                        <small class="text-danger text-uppercase fw-bold" style="font-size: 0.7rem;">Eliminadas/Bajas</small>
+                        <h4 class="mb-0 fw-bold text-danger">{{ total_bajas }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <form method="GET" action="" class="input-group input-group-lg">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Buscar por nombre, marca o QR..." value="{{ busqueda|default:'' }}" autofocus>
+                    <button class="btn btn-info text-white" type="submit">Buscar</button>
+                </form>
+            </div>
+        </div>
+
+        {% if herramientas %}
+            <div class="list-group shadow-sm">
+                {% for h in herramientas %}
+                <div class="list-group-item d-flex justify-content-between align-items-center {% if not h.activo %}bg-light opacity-75{% endif %}">
+                    
+                    <div>
+                        <h5 class="mb-1">
+                            {{ h.nombre }} <small class="text-muted">({{ h.marca }})</small>
+                            {% if h.estado == 'DE_BAJA' %}<small class="text-danger fst-italic fs-6 ms-2"><i class="bi bi-x-circle"></i> Baja Admin</small>{% endif %}
+                            {% if h.estado == 'BAJA_POR_DANO' %}<small class="text-danger fst-italic fs-6 ms-2"><i class="bi bi-heartbreak"></i> Dañada</small>{% endif %}
+                            {% if h.estado == 'BAJA_POR_PERDIDA' %}<small class="text-warning fst-italic fs-6 ms-2"><i class="bi bi-question-circle"></i> Perdida</small>{% endif %}
+                        </h5>
+                        
+                        <small class="text-muted d-block"><i class="bi bi-qr-code"></i> {{ h.codigo_qr }}</small>
+                        <small class="d-block"><i class="bi bi-geo-alt"></i> {{ h.ubicacion|default:"Sin ubicación" }}</small>
+
+                        <div class="mt-2">
+                            <a href="{% url 'imprimir_qr' h.id %}" target="_blank" class="btn btn-sm btn-outline-dark" style="font-size: 0.75rem;">
+                                <i class="bi bi-printer"></i> Imprimir Etiqueta
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex flex-column align-items-end gap-2">
+                        
+                        {% if h.estado == 'DISPONIBLE' %}
+                            <span class="badge bg-success rounded-pill">DISPONIBLE</span>
+                        {% elif h.estado == 'EN_USO' %}
+                            <span class="badge bg-warning text-dark rounded-pill">EN TERRENO</span>
+                        {% elif h.estado == 'EN_MANTENCION' %}
+                            <span class="badge bg-danger rounded-pill">EN TALLER</span>
+                        {% elif not h.activo %}
+                            <span class="badge bg-secondary rounded-pill">INACTIVO</span>
+                        {% endif %}
+
+                        {% if user.is_staff %}
+                            
+                            {% if not h.activo %}
+                                <a href="#" class="btn btn-sm btn-outline-success shadow-sm" 
+                                   style="font-size: 0.8rem;"
+                                   onclick="confirmarAlta(event, '{% url 'reactivar_herramienta' h.id %}')">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Restaurar / Reactivar
+                                </a>
+
+                            {% else %}
+                                
+                                {% if h.estado == 'EN_MANTENCION' %}
+                                    <div class="d-flex gap-2">
+                                        <a href="#" class="btn btn-sm btn-success shadow-sm"
+                                           style="font-size: 0.8rem;"
+                                           title="Reparación Exitosa"
+                                           onclick="confirmarAlta(event, '{% url 'reactivar_herramienta' h.id %}')">
+                                            <i class="bi bi-check-lg"></i> Alta
+                                        </a>
+                                        
+                                        <a href="#" class="btn btn-sm btn-outline-danger shadow-sm"
+                                           style="font-size: 0.8rem;"
+                                           title="Irreparable"
+                                           onclick="confirmarBaja(event, '{% url 'eliminar_herramienta' h.id %}', '{{ h.estado }}')">
+                                            <i class="bi bi-trash"></i> Baja
+                                        </a>
+                                    </div>
+
+                                {% else %}
+                                    <a href="#" class="btn btn-sm btn-outline-danger shadow-sm" 
+                                       style="font-size: 0.8rem;"
+                                       onclick="confirmarBaja(event, '{% url 'eliminar_herramienta' h.id %}', '{{ h.estado }}')">
+                                        <i class="bi bi-trash"></i> Dar de Baja
+                                    </a>
+                                {% endif %}
+
+                            {% endif %} {% endif %} </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            {% if busqueda %}
+                <div class="alert alert-warning text-center">
+                    <i class="bi bi-emoji-frown"></i> No encontramos herramientas con ese criterio.
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> No hay herramientas registradas en el sistema.
+                </div>
+            {% endif %}
+        {% endif %}
+        
+        <div class="mt-3">
+            <a href="{% url 'inicio' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmarBaja(e, url, estadoActual) {
+        e.preventDefault(); 
+        
+        let titulo = "¿Baja Administrativa?";
+        let texto = "La herramienta está DISPONIBLE. Pasará al historial de bajas.";
+        let icono = "question";
+        let colorBoton = "#dc3545"; 
+        let textoBoton = "Sí, dar de baja";
+
+        if (estadoActual === 'EN_USO') {
+            titulo = "⚠️ ¿Reportar PÉRDIDA?";
+            texto = "La herramienta figura EN TERRENO. Se marcará como 'PÉRDIDA EN OBRA'.";
+            icono = "warning";
+            colorBoton = "#ffc107";
+            textoBoton = "Confirmar Pérdida";
+        } 
+        else if (estadoActual === 'EN_MANTENCION') {
+            titulo = "🛠️ ¿Reportar DAÑO TOTAL?";
+            texto = "La herramienta NO tuvo arreglo en taller. Se marcará como 'DAÑO IRREPARABLE'.";
+            icono = "error"; // Icono de error (X roja) para enfatizar daño
+            colorBoton = "#dc3545";
+            textoBoton = "Confirmar Daño Total";
+        }
+
+        Swal.fire({
+            title: titulo,
+            text: texto,
+            icon: icono,
+            showCancelButton: true,
+            confirmButtonColor: colorBoton,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: textoBoton,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) window.location.href = url;
+        })
+    }
+
+    function confirmarAlta(e, url) {
+        e.preventDefault();
+        Swal.fire({
+            title: '¿Reactivar Herramienta?',
+            text: "La herramienta volverá a estar DISPONIBLE para préstamos.",
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonColor: '#198754', // Verde éxito
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, reactivar'
+        }).then((result) => {
+            if (result.isConfirmed) window.location.href = url;
+        })
+    }
+</script>
+{% endblock %}

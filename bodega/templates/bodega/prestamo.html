@@ -1,0 +1,211 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-qr-code-scan"></i> Escanear Herramienta</h5>
+            </div>
+            <div class="card-body text-center">
+                
+                <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden;"></div>
+                
+                <hr>
+                <p class="text-muted small">O ingrese el código manualmente:</p>
+                
+                <div class="input-group">
+                    <input type="text" id="input_manual" class="form-control" placeholder="Ej: HER-5" onkeypress="handleEnter(event)">
+                    <button class="btn btn-primary" onclick="agregarManual()">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <form method="POST" action="{% url 'prestamo' %}" id="form-prestamo" onsubmit="return validarEnvio(event)">
+            {% csrf_token %}
+            
+            <input type="hidden" name="lista_qrs" id="input_lista_qrs">
+
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-cart-check"></i> Confirmar Préstamo</h5>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Responsable:</label>
+                        <select name="trabajador" class="form-select" required>
+                            <option value="">-- Seleccione Trabajador --</option>
+                            {% for t in trabajadores %}
+                                <option value="{{ t.id }}">{{ t.nombre }} {{ t.apellido }} ({{ t.cargo }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <h6 class="fw-bold mt-4">Herramientas a prestar:</h6>
+                    <table class="table table-striped table-sm border">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Herramienta</th>
+                                <th>Código</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-carrito">
+                            <tr id="fila-vacia"><td colspan="3" class="text-center text-muted">Carrito vacío</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Observaciones (Opcional):</label>
+                        <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-5">
+                        <button type="submit" class="btn btn-dark btn-lg shadow-lg">
+                            <i class="bi bi-save-fill"></i> Confirmar Salida
+                        </button>
+                        
+                        <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-left-circle"></i> Cancelar / Volver atrás
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ESTADO DEL CLIENTE
+    var listaQRs = []; 
+    var bloqueoEscaneo = false; 
+    
+    const audioBeep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+    // 1. INICIAR CÁMARA
+    function onScanSuccess(decodedText, decodedResult) {
+        if (bloqueoEscaneo) return; 
+        
+        bloqueoEscaneo = true; 
+        audioBeep.play(); 
+        
+        procesarCodigo(decodedText);
+
+        setTimeout(() => { bloqueoEscaneo = false; }, 2500);
+    }
+
+    var html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", { fps: 10, qrbox: 250 }
+    );
+    html5QrcodeScanner.render(onScanSuccess);
+
+    // 2. PROCESAR CÓDIGO
+    function procesarCodigo(codigo) {
+        if (listaQRs.includes(codigo)) {
+            Swal.fire('¡Ya está en la lista!', 'Este ítem ya fue escaneado.', 'warning');
+            return;
+        }
+
+        fetch(`/api/verificar/?codigo=${codigo}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.existe) {
+                    if (data.disponible) {
+                        listaQRs.push(codigo);
+                        actualizarTabla(data.nombre, codigo);
+                        actualizarInputOculto();
+                        
+                        const Toast = Swal.mixin({
+                            toast: true, position: 'top-end', showConfirmButton: false, timer: 1500
+                        });
+                        Toast.fire({ icon: 'success', title: 'Agregado: ' + data.nombre });
+                    } else {
+                        Swal.fire('No Disponible', data.mensaje, 'error');
+                    }
+                } else {
+                    Swal.fire('Error', 'Código QR no reconocido en el sistema.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error de Conexión', 'No se pudo verificar el stock.', 'error');
+            });
+    }
+
+    // 3. INGRESO MANUAL
+    function handleEnter(e) {
+        if(e.keyCode === 13){
+            agregarManual();
+        }
+    }
+
+    function agregarManual() {
+        var input = document.getElementById('input_manual');
+        var codigo = input.value.trim();
+        if (codigo) {
+            procesarCodigo(codigo);
+            input.value = ''; 
+        }
+    }
+
+    // 4. ACTUALIZAR INTERFAZ
+    function actualizarTabla(nombre, codigo) {
+        var tbody = document.getElementById('tabla-carrito');
+        var filaVacia = document.getElementById('fila-vacia');
+        
+        if(filaVacia) filaVacia.remove(); 
+
+        var nuevaFila = `
+            <tr>
+                <td>${nombre}</td>
+                <td><span class="badge bg-secondary">${codigo}</span></td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarItem('${codigo}', this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', nuevaFila);
+    }
+
+    // 5. ELIMINAR ITEM
+    window.eliminarItem = function(codigo, boton) {
+        listaQRs = listaQRs.filter(item => item !== codigo);
+        boton.closest('tr').remove();
+        actualizarInputOculto();
+        
+        // Si vaciamos la lista, volver a poner el mensaje
+        if(listaQRs.length === 0){
+             var tbody = document.getElementById('tabla-carrito');
+             tbody.innerHTML = '<tr id="fila-vacia"><td colspan="3" class="text-center text-muted">Carrito vacío</td></tr>';
+        }
+    }
+
+    // 6. SERIALIZAR JSON
+    function actualizarInputOculto() {
+        document.getElementById('input_lista_qrs').value = JSON.stringify(listaQRs);
+    }
+
+    // 7. VALIDACIÓN CLIENTE
+    // Esto evita que se envíe el formulario si está vacío
+    window.validarEnvio = function(e) {
+        if (listaQRs.length === 0) {
+            e.preventDefault(); // Detiene el envío al servidor
+            Swal.fire({
+                icon: 'warning',
+                title: 'Carrito Vacío',
+                text: 'Debes agregar al menos una herramienta antes de confirmar.',
+                confirmButtonColor: '#ffc107'
+            });
+            return false;
+        }
+        return true;
+    }
+</script>
+{% endblock %}

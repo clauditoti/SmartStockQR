@@ -1,0 +1,50 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="text-primary"><i class="bi bi-people-fill"></i> Listado de Trabajadores</h3>
+        <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">Volver</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>RUT</th>
+                        <th>Nombre Completo</th>
+                        <th>Cargo</th>
+                        <th>Estado</th>
+                        <th>Acciones</th> </tr>
+                </thead>
+                <tbody>
+                    {% for t in trabajadores %}
+                    <tr class="{% if not t.activo %}table-secondary text-muted{% endif %}">
+                        <td>{{ t.rut }}</td>
+                        <td>{{ t.nombre }} {{ t.apellido }}</td>
+                        <td>{{ t.cargo }}</td>
+                        <td>
+                            {% if t.activo %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_staff and t.activo %}
+                                <a href="{% url 'eliminar_trabajador' t.id %}" 
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('¿Seguro que desea desactivar a {{ t.nombre }}? Ya no podrá recibir préstamos.');">
+                                    <i class="bi bi-person-x-fill"></i> Desactivar
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

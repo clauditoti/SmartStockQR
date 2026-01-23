@@ -1,0 +1,58 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="text-primary"><i class="bi bi-tools"></i> Inventario Maestro</h3>
+        <span class="badge bg-primary fs-6">{{ herramientas.count }} Activos Vigentes</span>
+    </div>
+
+    <div class="alert alert-light border shadow-sm">
+        <i class="bi bi-info-circle-fill text-primary"></i> 
+        Listado general de activos. Para realizar modificaciones o dar de baja, ir a <a href="{% url 'consultar_stock' %}" class="fw-bold">Consultar Stock</a>.
+    </div>
+
+    <div class="card shadow border-primary">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0 align-middle">
+                    <thead class="bg-primary text-white">
+                        <tr>
+                            <th>Código QR</th>
+                            <th>Nombre</th>
+                            <th>Marca / Modelo</th>
+                            <th>Ubicación</th>
+                            <th>Estado Actual</th>
+                            </tr>
+                    </thead>
+                    <tbody>
+                        {% for h in herramientas %}
+                        <tr>
+                            <td class="fw-bold text-nowrap">
+                                <i class="bi bi-qr-code"></i> {{ h.codigo_qr }}
+                            </td>
+                            <td>{{ h.nombre }}</td>
+                            <td>{{ h.marca }} <small class="text-muted">{{ h.modelo|default:"" }}</small></td>
+                            <td>{{ h.ubicacion.nombre }}</td>
+                            <td>
+                                {% if h.estado == 'DISPONIBLE' %}
+                                    <span class="badge bg-success rounded-pill">Disponible</span>
+                                {% elif h.estado == 'EN_USO' %}
+                                    <span class="badge bg-warning text-dark rounded-pill">En Uso</span>
+                                {% else %}
+                                    <span class="badge bg-danger rounded-pill">En Mantención</span>
+                                {% endif %}
+                            </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a href="{% url 'inicio' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+    </div>
+</div>
+{% endblock %}

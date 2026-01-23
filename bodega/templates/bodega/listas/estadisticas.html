@@ -1,0 +1,72 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="container">
+    <div class="mb-4">
+        <h3 class="text-primary"><i class="bi bi-bar-chart-line-fill"></i> Estadísticas de Rotación</h3>
+        <p class="text-muted">Análisis estratégico de uso de activos y comportamiento de trabajadores.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow h-100 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-tools"></i> Top 5: Herramientas Más Usadas</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Herramienta</th>
+                                <th class="text-center">Veces Prestada</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in top_herramientas %}
+                            <tr>
+                                <td>{{ h.nombre }} <small class="text-muted">({{ h.marca }})</small></td>
+                                <td class="text-center fw-bold">{{ h.num_prestamos }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="2" class="text-center p-3">Sin datos de préstamos aún.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card shadow h-100 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-people-fill"></i> Top 5: Trabajadores Frecuentes</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Trabajador</th>
+                                <th class="text-center">Total Herramientas Solicitadas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in top_trabajadores %}
+                            <tr>
+                                <td>{{ t.nombre }} {{ t.apellido }}</td>
+                                <td class="text-center fw-bold">{{ t.num_solicitudes }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="2" class="text-center p-3">Sin datos de trabajadores aún.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a href="{% url 'inicio' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+    </div>
+</div>
+{% endblock %}

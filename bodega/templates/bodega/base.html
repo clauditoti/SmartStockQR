@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SmartStockQR</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <style>
+        body { background-color: #f8f9fa; }
+        /* Efecto UX: Feedback visual al pasar el mouse por tarjetas */
+        .card-btn { cursor: pointer; transition: transform 0.2s; }
+        .card-btn:hover { transform: scale(1.05); }
+    </style>
+    
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-primary mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="{% url 'inicio' %}">
+                <i class="bi bi-box-seam-fill"></i> SmartStockQR
+            </a>
+            <span class="navbar-text text-white small me-auto ms-2">
+                Bodega Central
+            </span>
+
+            {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-box-arrow-right"></i> Salir ({{ user.username }})
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block contenido %}
+        {% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {% if messages %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                {% for message in messages %}
+                    
+                    var etiqueta = "{{ message.tags }}";
+                    // SEGURIDAD: 'escapejs' evita que comillas en el mensaje rompan el script
+                    var textoMensaje = "{{ message|escapejs }}"; 
+                    
+                    // Configuración por defecto (Éxito / Verde)
+                    var config = {
+                        title: '¡Operación Exitosa!',
+                        icon: 'success',
+                        confirmButtonColor: '#3085d6'
+                    };
+
+                    // Si Django reporta error, cambiamos a Rojo
+                    if (etiqueta.includes('error')) {
+                        config.title = '¡Atención!';
+                        config.icon = 'error';
+                        config.confirmButtonColor = '#d33';
+                    }
+
+                    // Disparamos la alerta de SweetAlert
+                    Swal.fire({
+                        title: config.title,
+                        text: textoMensaje,
+                        icon: config.icon,
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: config.confirmButtonColor
+                    });
+
+                {% endfor %}
+            });
+        </script>
+    {% endif %}
+
+</body>
+</html>

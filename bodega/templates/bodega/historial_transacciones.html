@@ -1,0 +1,245 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="container-fluid">
+    
+    <div class="row mb-3 align-items-center no-print">
+        <div class="col-md-8">
+            <h4 class="text-primary mb-0"><i class="bi bi-table"></i> Historial Global</h4>
+            <p class="text-muted small mb-0">Auditoría completa de transacciones.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-sm btn-dark shadow-sm">
+                <i class="bi bi-printer-fill"></i> Imprimir
+            </button>
+            <a href="{% url 'reportes' %}" class="btn btn-sm btn-outline-secondary ms-2">Volver</a>
+        </div>
+    </div>
+
+    <div class="d-none d-print-block mb-2 text-center">
+        <h4>Informe de Auditoría Global - SmartStockQR</h4>
+    </div>
+
+    <div class="card mb-3 shadow-sm bg-light no-print border-0">
+        <div class="card-body py-2">
+            <form method="GET" class="row g-2 align-items-center">
+                <input type="hidden" name="orden" value="{{ orden_actual }}">
+
+                <div class="col-md-5">
+                    <input type="text" name="q" value="{{ query|default:'' }}" class="form-control form-control-sm" placeholder="🔍 Buscar por Nombre, RUT o QR...">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="fecha_fin" value="{{ fecha_fin }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped table-bordered table-hover align-middle mb-0 tabla-compacta">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th width="12%">
+                                <div class="d-flex justify-content-center align-items-center gap-1">
+                                    Fecha
+                                    <a href="?orden={% if orden_actual == 'fecha' %}-fecha{% else %}fecha{% endif %}&q={{ query }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'fecha' %}
+                                            <i class="bi bi-sort-numeric-down-alt text-info"></i>
+                                        {% elif orden_actual == '-fecha' %}
+                                            <i class="bi bi-sort-numeric-down text-info"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-white-50 opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+
+                            <th width="35%">
+                                <div class="d-flex justify-content-center align-items-center gap-1">
+                                    Herramienta
+                                    <a href="?orden={% if orden_actual == 'herramienta' %}-herramienta{% else %}herramienta{% endif %}&q={{ query }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'herramienta' %}
+                                            <i class="bi bi-sort-alpha-down text-info"></i>
+                                        {% elif orden_actual == '-herramienta' %}
+                                            <i class="bi bi-sort-alpha-down-alt text-info"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-white-50 opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+
+                            <th width="20%">
+                                <div class="d-flex justify-content-center align-items-center gap-1">
+                                    Trabajador
+                                    <a href="?orden={% if orden_actual == 'trabajador' %}-trabajador{% else %}trabajador{% endif %}&q={{ query }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'trabajador' %}
+                                            <i class="bi bi-sort-alpha-down text-info"></i>
+                                        {% elif orden_actual == '-trabajador' %}
+                                            <i class="bi bi-sort-alpha-down-alt text-info"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-white-50 opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+
+                            <th width="13%">
+                                <div class="d-flex justify-content-center align-items-center gap-1">
+                                    Bodeguero
+                                    <a href="?orden={% if orden_actual == 'bodeguero' %}-bodeguero{% else %}bodeguero{% endif %}&q={{ query }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'bodeguero' %}
+                                            <i class="bi bi-sort-alpha-down text-info"></i>
+                                        {% elif orden_actual == '-bodeguero' %}
+                                            <i class="bi bi-sort-alpha-down-alt text-info"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-white-50 opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+
+                            <th width="10%">
+                                <div class="d-flex justify-content-center align-items-center gap-1">
+                                    Estado
+                                    <a href="?orden={% if orden_actual == 'estado' %}-estado{% else %}estado{% endif %}&q={{ query }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'estado' %}
+                                            <i class="bi bi-sort-alpha-down text-info"></i>
+                                        {% elif orden_actual == '-estado' %}
+                                            <i class="bi bi-sort-alpha-down-alt text-info"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-white-50 opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+
+                            <th width="10%">
+                                <div class="d-flex justify-content-center align-items-center gap-1">
+                                    Devolución
+                                    <a href="?orden={% if orden_actual == 'devolucion' %}-devolucion{% else %}devolucion{% endif %}&q={{ query }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'devolucion' %}
+                                            <i class="bi bi-sort-numeric-down-alt text-info"></i>
+                                        {% elif orden_actual == '-devolucion' %}
+                                            <i class="bi bi-sort-numeric-down text-info"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-white-50 opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in movimientos %}
+                        <tr>
+                            <td class="text-center">
+                                <span class="fw-bold">{{ mov.prestamo.fecha_solicitud|date:"d/m/y" }}</span>
+                                <span class="text-muted ms-1">{{ mov.prestamo.fecha_solicitud|date:"H:i" }}</span>
+                            </td>
+
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-secondary me-2" style="font-size: 0.7rem;">{{ mov.herramienta.codigo_qr }}</span>
+                                    <span class="text-truncate-2" title="{{ mov.herramienta.nombre }}">
+                                        {{ mov.herramienta.nombre }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="fw-bold text-truncate">{{ mov.prestamo.trabajador.nombre }} {{ mov.prestamo.trabajador.apellido }}</div>
+                                <small class="text-muted" style="font-size: 0.75rem;">{{ mov.prestamo.trabajador.rut }}</small>
+                            </td>
+
+                            <td class="text-center">
+                                <small class="text-uppercase">{{ mov.prestamo.bodeguero.username }}</small>
+                            </td>
+
+                            <td class="text-center">
+                                {% if not mov.devuelto %}
+                                    <span class="badge bg-warning text-dark border border-warning py-1 px-2">PENDIENTE</span>
+                                {% elif mov.estado_devolucion == 'DISPONIBLE' %}
+                                    <span class="badge bg-success py-1 px-2">BUENO</span>
+                                {% else %}
+                                    <span class="badge bg-danger py-1 px-2">DAÑADO</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center">
+                                {% if mov.devuelto %}
+                                    <small>{{ mov.fecha_devolucion|date:"d/m/y H:i" }}</small>
+                                {% else %}
+                                    <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-3 text-muted small">
+                                Sin movimientos registrados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-none d-print-block mt-4 pt-3">
+        <div class="row text-center text-muted" style="font-size: 10px;">
+            <div class="col-6"><div class="border-top border-dark pt-1 mx-3">Firma Bodega</div></div>
+            <div class="col-6"><div class="border-top border-dark pt-1 mx-3">Firma Administración</div></div>
+        </div>
+        <div class="text-end mt-2" style="font-size: 8px;">
+            Gen: {% now "d/m/Y H:i" %}
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.1;
+    }
+    .tabla-compacta { font-size: 0.85rem; }
+    .tabla-compacta td, .tabla-compacta th {
+        padding: 0.25rem 0.4rem !important;
+        vertical-align: middle;
+    }
+    @media print {
+        @page { size: landscape; margin: 1cm; }
+        .no-print { display: none !important; }
+        .card { border: none !important; box-shadow: none !important; }
+        .tabla-compacta {
+            font-size: 10px !important;
+            width: 100%;
+            border: 1px solid #000;
+        }
+        .tabla-compacta td, .tabla-compacta th {
+            padding: 2px 4px !important;
+            border: 1px solid #ccc !important;
+        }
+        .badge {
+            border: 1px solid #000;
+            color: black !important;
+            font-weight: bold;
+            padding: 1px 3px !important;
+        }
+        thead { background-color: #ddd !important; -webkit-print-color-adjust: exact; }
+    }
+</style>
+{% endblock %}

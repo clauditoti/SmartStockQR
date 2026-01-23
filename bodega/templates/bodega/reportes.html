@@ -1,0 +1,222 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="container-fluid">
+    
+    <div class="row mb-4 align-items-center no-print">
+        <div class="col-md-6">
+            <h2 class="text-primary mb-0"><i class="bi bi-clock-history"></i> Reporte de Mermas</h2>
+            <p class="text-muted small mb-0">Bitácora de auditoría: Bajas, Pérdidas y Reactivaciones.</p>
+        </div>
+        
+        <div class="col-md-6 text-end">
+            <button onclick="window.print()" class="btn btn-dark shadow-sm">
+                <i class="bi bi-printer-fill"></i> Imprimir Informe
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4 no-print border-primary">
+        <div class="card-body bg-light">
+            <form method="GET" class="row g-3 align-items-end">
+                <input type="hidden" name="orden" value="{{ orden_actual }}">
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Buscar:</label>
+                    <input type="text" name="q" value="{{ busqueda }}" class="form-control" placeholder="Herramienta, QR, Motivo...">
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Desde:</label>
+                    <input type="date" name="fecha_inicio" value="{{ filtro_inicio }}" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Hasta:</label>
+                    <input type="date" name="fecha_fin" value="{{ filtro_fin }}" class="form-control">
+                </div>
+                
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-filter"></i> Buscar</button>
+                    <a href="{% url 'reportes' %}" class="btn btn-outline-secondary" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-light border shadow-sm d-flex align-items-center justify-content-between" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-list-check fs-3 text-primary me-3"></i>
+                    <div>
+                        <h5 class="mb-0 fw-bold">Total de Movimientos Registrados: {{ total_mermas }}</h5>
+                        <small class="text-muted">Ordenado por: {{ orden_actual|default:"Fecha Descendente" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0 align-middle">
+                    <thead class="table-light text-center align-middle">
+                        <tr>
+                            <th style="width: 15%;">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    Fecha / Hora
+                                    <a href="?orden={% if orden_actual == 'fecha' %}-fecha{% else %}fecha{% endif %}&q={{ busqueda }}&fecha_inicio={{ filtro_inicio }}&fecha_fin={{ filtro_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'fecha' %}
+                                            <i class="bi bi-sort-numeric-down-alt text-primary"></i>
+                                        {% elif orden_actual == '-fecha' %}
+                                            <i class="bi bi-sort-numeric-down text-primary"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-muted opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+
+                            <th style="width: 10%;">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    Acción
+                                    <a href="?orden={% if orden_actual == 'accion' %}-accion{% else %}accion{% endif %}&q={{ busqueda }}&fecha_inicio={{ filtro_inicio }}&fecha_fin={{ filtro_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'accion' %}
+                                            <i class="bi bi-sort-alpha-down text-primary"></i>
+                                        {% elif orden_actual == '-accion' %}
+                                            <i class="bi bi-sort-alpha-down-alt text-primary"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-muted opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+
+                            <th style="width: 25%;">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    Herramienta
+                                    <a href="?orden={% if orden_actual == 'herramienta' %}-herramienta{% else %}herramienta{% endif %}&q={{ busqueda }}&fecha_inicio={{ filtro_inicio }}&fecha_fin={{ filtro_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'herramienta' %}
+                                            <i class="bi bi-sort-alpha-down text-primary"></i>
+                                        {% elif orden_actual == '-herramienta' %}
+                                            <i class="bi bi-sort-alpha-down-alt text-primary"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-muted opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+
+                            <th style="width: 30%;">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    Motivo / Detalle
+                                    <a href="?orden={% if orden_actual == 'motivo' %}-motivo{% else %}motivo{% endif %}&q={{ busqueda }}&fecha_inicio={{ filtro_inicio }}&fecha_fin={{ filtro_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'motivo' %}
+                                            <i class="bi bi-sort-alpha-down text-primary"></i>
+                                        {% elif orden_actual == '-motivo' %}
+                                            <i class="bi bi-sort-alpha-down-alt text-primary"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-muted opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+
+                            <th style="width: 20%;">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    Responsable
+                                    <a href="?orden={% if orden_actual == 'usuario' %}-usuario{% else %}usuario{% endif %}&q={{ busqueda }}&fecha_inicio={{ filtro_inicio }}&fecha_fin={{ filtro_fin }}" class="text-decoration-none no-print">
+                                        {% if orden_actual == 'usuario' %}
+                                            <i class="bi bi-sort-alpha-down text-primary"></i>
+                                        {% elif orden_actual == '-usuario' %}
+                                            <i class="bi bi-sort-alpha-down-alt text-primary"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-up text-muted opacity-50"></i>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    
+                    <tbody>
+                        {% for h in reportes %} 
+                        <tr>
+                            <td class="text-center">
+                                <span class="fw-bold d-block">{{ h.fecha_evento|date:"d/m/Y" }}</span>
+                                <small class="text-muted">{{ h.fecha_evento|date:"H:i" }} hrs</small>
+                            </td>
+
+                            <td class="text-center">
+                                {% if h.accion == 'BAJA' %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger w-100 py-2">
+                                        <i class="bi bi-arrow-down-circle-fill"></i> BAJA
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success w-100 py-2">
+                                        <i class="bi bi-arrow-up-circle-fill"></i> ALTA
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <strong class="text-dark">{{ h.herramienta.nombre }}</strong><br>
+                                <span class="badge bg-secondary">{{ h.herramienta.codigo_qr }}</span>
+                                <small class="text-muted ms-1">{{ h.herramienta.marca }}</small>
+                            </td>
+
+                            <td>
+                                {{ h.motivo }}
+                            </td>
+
+                            <td class="text-center">
+                                <i class="bi bi-person-circle text-muted"></i> 
+                                {{ h.usuario.username|default:"Sistema"|title }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-clock-history fs-1 text-secondary opacity-25"></i>
+                                <p class="mt-2">No hay historial de movimientos aún.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-none d-print-block mt-5 text-center text-muted">
+        <br><br><br>
+        <div class="row">
+            <div class="col-6">
+                <div class="border-top border-dark pt-2 mx-5">Firma Bodeguero</div>
+            </div>
+            <div class="col-6">
+                <div class="border-top border-dark pt-2 mx-5">Firma Administración</div>
+            </div>
+        </div>
+        <small class="d-block mt-4">Reporte de Auditoría generado el {% now "d/m/Y H:i" %}</small>
+    </div>
+
+    <div class="mt-3 no-print">
+        <a href="{% url 'menu_reportes' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver al Menú
+        </a>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        .card { border: none !important; box-shadow: none !important; }
+        .table { width: 100%; border: 1px solid #000; font-size: 11px; }
+        .badge { border: 1px solid #000 !important; color: black !important; background: none !important; }
+        thead { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+        a { text-decoration: none !important; color: black !important; pointer-events: none; }
+    }
+</style>
+{% endblock %}

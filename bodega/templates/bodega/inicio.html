@@ -1,0 +1,215 @@
+{% extends 'bodega/base.html' %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+    
+    {% if es_admin %}
+    <div class="col-12 mb-4">
+        <h3 class="text-primary mb-3"><i class="bi bi-speedometer2"></i> Panel de Control</h3>
+        <h5 class="mb-3 text-primary border-bottom pb-2">Resumen operativo de la obra en tiempo real</h5>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'herramientas_disponibles' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-start border-4 border-primary h-100 tile-hover">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">Stock Disponible</h6>
+                            <h2 class="mb-0 fw-bold text-primary">{{ kpi_total }}</h2>
+                        </div>
+                        <div class="fs-1 text-primary opacity-25"><i class="bi bi-tools"></i></div>
+                    </div>
+                    <small class="text-primary mt-2 d-block"><i class="bi bi-eye"></i> Ver Inventario</small>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'herramientas_en_uso' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-start border-4 border-warning h-100 tile-hover">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">En Uso (Terreno)</h6>
+                            <h2 class="mb-0 fw-bold text-warning">{{ kpi_prestamos }}</h2>
+                        </div>
+                        <div class="fs-1 text-warning opacity-25"><i class="bi bi-person-walking"></i></div>
+                    </div>
+                    <small class="text-warning mt-2 d-block"><i class="bi bi-eye"></i> Ver Quién las tiene</small>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'en_mantencion' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-start border-4 border-danger h-100 tile-hover">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">En Mantención</h6>
+                            <h2 class="mb-0 fw-bold text-danger">{{ kpi_mantencion }}</h2>
+                        </div>
+                        <div class="fs-1 text-danger opacity-25"><i class="bi bi-wrench-adjustable"></i></div>
+                    </div>
+                    <small class="text-danger mt-2 d-block"><i class="bi bi-arrow-right"></i> Ir al Taller</small>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'lista_trabajadores' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-start border-4 border-success h-100 tile-hover">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1">Trabajadores</h6>
+                            <h2 class="mb-0 fw-bold text-success">{{ kpi_trabajadores }}</h2>
+                        </div>
+                        <div class="fs-1 text-success opacity-25"><i class="bi bi-people-fill"></i></div>
+                    </div>
+                    <small class="text-success mt-2 d-block"><i class="bi bi-list-ul"></i> Ver Nómina</small>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 mt-4 mb-2">
+        <h5 class="mb-3 text-primary border-bottom pb-2">Acciones Rápidas de Bodega</h5>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <a href="{% url 'prestamo' %}" class="text-decoration-none">
+            <div class="card bg-primary text-white shadow h-100 tile-hover">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="card-title mb-0"><i class="bi bi-box-arrow-up"></i> Registrar Préstamo</h4>
+                        <small class="opacity-75">Salida de herramientas a terreno</small>
+                    </div>
+                    <i class="bi bi-arrow-right-circle fs-1"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <a href="{% url 'devolucion' %}" class="text-decoration-none">
+            <div class="card bg-success text-white shadow h-100 tile-hover">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="card-title mb-0"><i class="bi bi-box-arrow-in-down"></i> Registrar Devolución</h4>
+                        <small class="opacity-75">Reingreso y chequeo de estado</small>
+                    </div>
+                    <i class="bi bi-arrow-right-circle fs-1"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 mt-4 mb-2">
+        <h5 class="mb-3 text-primary border-bottom pb-2">Reportes y Análisis</h5>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm border-info h-100 tile-hover">
+            <div class="card-body text-center">
+                <h1 class="text-info"><i class="bi bi-graph-up-arrow"></i></h1>
+                <h5 class="card-title">Estadísticas de Uso</h5>
+                <p class="card-text text-muted small">Rotación de activos y top trabajadores.</p>
+                <a href="{% url 'estadisticas' %}" class="btn btn-outline-info w-100 stretched-link">Ver Análisis</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm h-100 border-start border-warning border-5">
+            <div class="card-body text-center">
+                <h1 class="display-4 text-warning"><i class="bi bi-file-earmark-bar-graph"></i></h1>
+                <h5 class="card-title fw-bold">Gestión de Reportes</h5>
+                <p class="card-text text-muted small">Mermas, Bajas y Trazabilidad Histórica.</p>
+                <a href="{% url 'menu_reportes' %}" class="btn btn-outline-warning w-100 stretched-link">
+                    Ir a Reportes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+         <div class="card shadow-sm border-secondary h-100 tile-hover">
+            <div class="card-body text-center">
+                <h1 class="text-secondary"><i class="bi bi-archive-fill"></i></h1>
+                <h5 class="card-title">Herramientas de baja</h5>
+                <p class="card-text text-muted small">Listado de herramientas inactivas.</p>
+                <a href="{% url 'reporte_bajas' %}" class="btn btn-outline-secondary w-100 stretched-link">Ver Listado</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 mt-4">
+        <h5 class="mb-3">Herramientas del Sistema</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <a href="{% url 'consultar_stock' %}" class="btn btn-outline-dark w-100 p-3 mb-2">
+                    <i class="bi bi-search me-2"></i> Buscar/Gestionar Stock (baja-alta)
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="/admin/" class="btn btn-dark w-100 p-3 mb-2">
+                    <i class="bi bi-gear-fill me-2"></i> Panel de Administración (Django)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+
+    <div class="col-md-6 text-center">
+        <h3 class="mb-4">Bienvenido, {{ user.username|title }}</h3>
+        <p class="text-muted mb-5">Selecciona una operación para comenzar</p>
+
+        <div class="card shadow-sm mb-3 card-btn border-primary">
+            <div class="card-body p-4">
+                <h1 class="text-primary"><i class="bi bi-box-arrow-up"></i></h1>
+                <h5 class="card-title mt-2">Registrar Préstamo</h5>
+                <p class="card-text small text-muted">Escanear QR para salida de herramientas.</p>
+                <a href="{% url 'prestamo' %}" class="btn btn-primary w-100">Iniciar Salida</a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3 card-btn border-success">
+            <div class="card-body p-4">
+                <h1 class="text-success"><i class="bi bi-box-arrow-in-down"></i></h1>
+                <h5 class="card-title mt-2">Registrar Devolución</h5>
+                <p class="card-text small text-muted">Reingreso y validación de estado.</p>
+                <a href="{% url 'devolucion' %}" class="btn btn-success w-100">Iniciar Retorno</a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3 card-btn border-info">
+            <div class="card-body p-4">
+                <h1 class="text-info"><i class="bi bi-search"></i></h1>
+                <h5 class="card-title mt-2">Consultar Stock</h5>
+                <p class="card-text small text-muted">Buscar herramienta por nombre, marca o QR.</p>
+                <a href="{% url 'consultar_stock' %}" class="btn btn-info text-white w-100">Buscar Herramienta</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    /* Efecto 'Hover' para que las tarjetas salten al pasar el mouse */
+    .tile-hover { transition: transform 0.2s, background-color 0.2s; }
+    .tile-hover:hover {
+        transform: translateY(-5px);
+        cursor: pointer;
+        background-color: #f8f9fa;
+    }
+    /* Hace que toda la tarjeta sea clickeable si tiene stretched-link dentro */
+    .card { position: relative; overflow: hidden; }
+</style>
+{% endblock %}
